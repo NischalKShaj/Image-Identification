@@ -1,65 +1,32 @@
 # file for training the models
 
 # importing the required modules
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import numpy as np
-import os
-from PIL import Image
+import torch
+import torch.nn as nn
+import torch.optim  as optim
+import torchvision.transforms as transforms
+import torchvisin.datasets as datasets
+import torch.utils.data as Dataloader
 
-# function for loading and preprocessing the data sets
-def load_image(data_dir):
-    images = []
-    labels = []
-    class_names = os.listdir(data_dir)  # Get class names
-    print("🔹 Classes found:", class_names)  
+# setting the up the device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"using  device {device}")
 
-    for index, class_name in enumerate(class_names):
-        class_dir = os.path.join(data_dir, class_name)
-        image_count = 0  # Track number of images loaded
+# dataset directory
+data_dir = "dataset"
 
-        for image_name in os.listdir(class_dir):
-            img_path = os.path.join(class_dir, image_name)
-            try:
-                img = Image.open(img_path).convert("RGB")  # Ensure 3 channels
-                img = img.resize((128, 128))
-                images.append(np.array(img) / 255.0)
-                labels.append(index)
-                image_count += 1
-            except Exception as e:
-                print(f"⚠️ Error loading {img_path}: {e}")
-
-        print(f"✅ Loaded {image_count} images for class '{class_name}'")
-
-    images = np.array(images, dtype=np.float32).reshape(-1, 128, 128, 3)
-    labels = np.array(labels, dtype=np.int32)
-
-    return images, labels, class_names
-
-
-# load the data set
-data_dir="dataset"
-x,y, class_names=load_image(data_dir)
-if x.size==0 or y.size==0:
-    raise ValueError("🚨 No images found! Check if 'dataset/' has images in subfolders.")
-
-# build a simple CNN model
-model=keras.Sequential([
-    layers.Conv2D(32,(3,3),activation="relu", input_shape=(128,128,3)),
-    layers.MaxPooling2D(2,2),
-    layers.Conv2D(32,(3,3),activation="relu"),
-    layers.MaxPooling2D(2,2),
-    layers.Flatten(),
-    layers.Dense(128, activation="relu"),
-    layers.Dense(len(class_names), activation="softmax")
+# define image transformation 
+transform = transforms.Compose([
+    transforms.Resize((128, 128)),
+    transforms.ToTensor()
 ])
 
-# compiling and training the models
-model.compile(optimizer="adam", loss="sparse_categorical_crossentropy",metrics=["accuracy"])
-model.fit(x,y, epochs=10)
+# loading the dataset
+dataset = datasets.ImageFolder(root=data_dir, transform=transform)
+dataloader = Dataloader(dataset, batchsize=32, shuffle=True)
 
-# saving the model
-model.save("model/image_model.h5")
+# get class names
+class_names = dataset.classes
+print(f"classes found {class_names}")
 
-print("✅ Model training complete and saved!")
+# define cnn models
