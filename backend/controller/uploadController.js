@@ -15,8 +15,8 @@ const uploadController = {
       }
 
       // for setting up the child process for the image prediction
-      const spawn = child.spawn("python", []);
-      res.status(200).json({ prediction: "Prediction" });
+      // const spawn = child.spawn("python", []);
+      res.status(200).json({ data: "Success" });
     } catch (error) {
       console.error("error from the predict controller", error);
       res.status(500).json({ error: error });

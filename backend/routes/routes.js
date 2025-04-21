@@ -13,7 +13,7 @@ const upload = multer({ storage });
 const router = express.Router();
 
 // router for uploading the image for processing
-router.post("/uploads", upload.single("image"), uploadController.predict);
+router.post("/predict", upload.single("image"), uploadController.predict);
 
 // exporting the routes
 module.exports = router;
